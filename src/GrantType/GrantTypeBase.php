@@ -2,10 +2,10 @@
 
 namespace Sainsburys\Guzzle\Oauth2\GrantType;
 
-use Sainsburys\Guzzle\Oauth2\AccessToken;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\RequestOptions;
 use InvalidArgumentException;
+use Sainsburys\Guzzle\Oauth2\AccessToken;
 
 abstract class GrantTypeBase implements GrantTypeInterface
 {
@@ -36,7 +36,7 @@ abstract class GrantTypeBase implements GrantTypeInterface
 
     /**
      * @param ClientInterface $client
-     * @param array           $config
+     * @param array $config
      */
     public function __construct(ClientInterface $client, array $config = [])
     {
@@ -119,15 +119,17 @@ abstract class GrantTypeBase implements GrantTypeInterface
 
         $requestOptions = [];
 
-        if ($this->config[self::CONFIG_AUTH_LOCATION] !== RequestOptions::BODY) {
+        if ($this->config[self::CONFIG_AUTH_LOCATION] === RequestOptions::HEADERS) {
             $requestOptions[RequestOptions::AUTH] = [
                 $this->config[self::CONFIG_CLIENT_ID],
                 isset($this->config[self::CONFIG_CLIENT_SECRET]) ? $this->config[self::CONFIG_CLIENT_SECRET] : '',
             ];
             unset($body[self::CONFIG_CLIENT_ID], $body[self::CONFIG_CLIENT_SECRET]);
+        } elseif ($this->config[self::CONFIG_AUTH_LOCATION] === RequestOptions::JSON) {
+            $requestOptions[RequestOptions::JSON] = $body;
+        } else {
+            $requestOptions[RequestOptions::FORM_PARAMS] = $body;
         }
-
-        $requestOptions[RequestOptions::FORM_PARAMS] = $body;
 
         if ($additionalOptions = $this->getAdditionalOptions()) {
             $requestOptions = array_merge_recursive($requestOptions, $additionalOptions);
